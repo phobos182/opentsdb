@@ -185,8 +185,7 @@ public final class UniqueId implements UniqueIdInterface {
         if (name == null) {
           throw new NoSuchUniqueId(kind(), id);
         }
-        addNameToCache(id, name);
-        addIdToCache(name, id);
+        cacheMapping(name, id);
         return name;
       }
     }
@@ -245,8 +244,7 @@ public final class UniqueId implements UniqueIdInterface {
                                           + " which is != " + idWidth
                                           + " required for '" + kind() + '\'');
         }
-        addIdToCache(name, id);
-        addNameToCache(id, name);
+        cacheMapping(name, id);
         return id;
       }
     }
@@ -276,6 +274,12 @@ public final class UniqueId implements UniqueIdInterface {
           + Arrays.toString(id) + ", already mapped to "
           + Arrays.toString(found));
     }
+  }
+
+  /** Adds the bidirectional mapping in the cache.  */
+  private void cacheMapping(final String name, final byte[] id) {
+    addIdToCache(name, id);
+    addNameToCache(id, name);
   }
 
   public byte[] getOrCreateId(String name) throws HBaseException {
@@ -413,8 +417,7 @@ public final class UniqueId implements UniqueIdInterface {
           continue;
         }
 
-        addIdToCache(name, row);
-        addNameToCache(row, name);
+        cacheMapping(name, row);
         return row;
       } finally {
         unlock(lock);
@@ -501,8 +504,7 @@ public final class UniqueId implements UniqueIdInterface {
           final byte[] id = row.get(0).value();
           final byte[] cached_id = nameCache.get(name);
           if (cached_id == null) {
-            addIdToCache(name, id);
-            addNameToCache(id, name);
+            cacheMapping(name, id);
           } else if (!Arrays.equals(id, cached_id)) {
             throw new IllegalStateException("WTF?  For kind=" + kind()
               + " name=" + name + ", we have id=" + Arrays.toString(cached_id)
